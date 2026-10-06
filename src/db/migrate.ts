@@ -3,7 +3,8 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { createDb } from "./index";
 
 export async function runMigrations(url: string): Promise<void> {
-  const { db, close } = createDb(url);
+  // NOTICE вида «schema already exists» при повторном запуске — штатные, не печатаем.
+  const { db, close } = createDb(url, { max: 1, onnotice: () => {} });
   try {
     await migrate(db, { migrationsFolder: "src/db/migrations" });
   } finally {

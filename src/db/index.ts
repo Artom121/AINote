@@ -5,8 +5,11 @@ import * as schema from "./schema";
 
 export type Db = PostgresJsDatabase<typeof schema>;
 
-export function createDb(url: string): { db: Db; close: () => Promise<void> } {
-  const client = postgres(url, { max: 10 });
+export function createDb(
+  url: string,
+  options: postgres.Options<Record<string, never>> = {},
+): { db: Db; close: () => Promise<void> } {
+  const client = postgres(url, { max: 10, ...options });
   return { db: drizzle(client, { schema }), close: () => client.end() };
 }
 
