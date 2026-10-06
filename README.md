@@ -3,7 +3,7 @@
 Многопользовательское веб-приложение: заметки и календарь управляются на естественном языке —
 текстом или голосом. Полное ТЗ — [docs/TZ.md](docs/TZ.md).
 
-**Текущий этап:** 1 — заметки без ИИ. Этап 0 (каркас) завершён.
+**Текущий этап:** 2 — агент по заметкам. Завершены: Этап 0 (каркас), Этап 1 (заметки без ИИ).
 
 ## Стек
 
@@ -20,6 +20,7 @@ docker compose up -d db       # PostgreSQL с pgvector на localhost:5433
 pnpm install
 pnpm db:migrate
 pnpm dev                      # http://localhost:3000
+pnpm worker                   # фоновые задачи (pg-boss), в отдельном терминале
 ```
 
 Минимальный `.env` для разработки:
@@ -51,7 +52,7 @@ OAuth-токены Яндекса после входа не сохраняют�
 ### Весь стек в Docker
 
 ```bash
-docker compose up --build     # db → migrate → app на http://localhost:3000
+docker compose up --build     # db → migrate → app (http://localhost:3000) + worker
 ```
 
 Сервис `app` работает в production-режиме и читает `.env`; там обязательны ключи Яндекс ID.
@@ -82,6 +83,27 @@ CI (GitHub Actions, `.github/workflows/ci.yml`) запускает lint, typeche
 | `AUTH_URL`                             | да           | публичный адрес приложения                  |
 | `AUTH_TRUST_HOST`                      | за прокси    | `true`, если перед приложением nginx и т.п. |
 | `AUTH_YANDEX_ID`, `AUTH_YANDEX_SECRET` | в production | OAuth-приложение Яндекс ID                  |
+
+## Заметки
+
+Страницы: `/notes` (список, поиск, фильтр по тегам), `/notes/new`, `/notes/<id>` (редактор
+Markdown), `/notes/<id>/history` (версии и откат), `/notes/trash` (корзина).
+
+REST API (нужна сессия; для POST/PATCH/DELETE — заголовок `Origin` своего сайта):
+
+| Метод и путь                                        | Что делает                                   |
+| --------------------------------------------------- | -------------------------------------------- |
+| `GET /api/notes?q=&tag=&limit=&offset=`             | список; `q` — полнотекстовый поиск по-русски |
+| `POST /api/notes`                                   | создать `{ title?, content, tags? }`         |
+| `GET / PATCH / DELETE /api/notes/<id>`              | получить / изменить / удалить в корзину      |
+| `POST /api/notes/<id>/restore`                      | восстановить из корзины                      |
+| `GET /api/notes/trash`                              | корзина                                      |
+| `GET /api/notes/<id>/versions`                      | история версий                               |
+| `POST /api/notes/<id>/versions/<versionId>/restore` | откат к версии                               |
+| `GET /api/tags`                                     | теги с количеством заметок                   |
+
+Чужая, удалённая или несуществующая заметка — всегда `404`. Заметки из корзины окончательно
+удаляет задача `purge-trash` воркера (ежедневно в 03:00 МСК) через 30 дней.
 
 ## Миграции
 
