@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: assistant
+          POSTGRES_PASSWORD: assistant
+          POSTGRES_DB: assistant
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U assistant" --health-interval 2s --health-timeout 3s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgres://assistant:assistant@localhost:5432/assistant
+      TEST_DATABASE_URL: postgres://assistant:assistant@localhost:5432/assistant_test
+      AUTH_SECRET: ci-only-secret-not-used-anywhere-else-000
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Create test database
+        run: psql "$DATABASE_URL" -c "CREATE DATABASE assistant_test"
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+      - run: pnpm db:migrate
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
