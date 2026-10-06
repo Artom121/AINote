@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AppHeader } from "@/components/app-header";
 import { requireUser } from "@/lib/auth/current-user";
 import { TimezoneInit } from "./timezone-init";
 
@@ -8,15 +8,7 @@ export default async function ChatPage() {
   return (
     <div className="flex h-dvh flex-col">
       {!user.timezone && <TimezoneInit />}
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h1 className="font-semibold">Ассистент</h1>
-        <nav className="flex items-center gap-4 text-sm">
-          <span className="hidden text-muted sm:inline">{user.name ?? user.email}</span>
-          <Link href="/settings" className="hover:underline">
-            Настройки
-          </Link>
-        </nav>
-      </header>
+      <AppHeader active="/" />
 
       <main className="flex flex-1 flex-col overflow-hidden">
         <section
