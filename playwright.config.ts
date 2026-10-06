@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 3100;
+// Тот же порт, что у `pnpm dev`: Next 16 не запускает второй dev-сервер в одной папке,
+// поэтому локально переиспользуем уже запущенный.
+const port = 3000;
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -14,6 +16,5 @@ export default defineConfig({
     url: `http://localhost:${port}/login`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    env: { AUTH_URL: `http://localhost:${port}` },
   },
 });

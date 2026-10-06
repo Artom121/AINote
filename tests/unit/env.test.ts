@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEnv } from "@/lib/env";
+import { isYandexConfigured, parseEnv } from "@/lib/env";
 
 const base = {
   DATABASE_URL: "postgres://u:p@localhost:5432/db",
@@ -26,5 +26,15 @@ describe("parseEnv", () => {
       parseEnv({ ...base, NODE_ENV: "production", AUTH_YANDEX_ID: "id", AUTH_YANDEX_SECRET: "s" })
         .NODE_ENV,
     ).toBe("production");
+  });
+});
+
+describe("isYandexConfigured", () => {
+  it("true только когда заданы оба ключа", () => {
+    expect(isYandexConfigured(parseEnv(base))).toBe(false);
+    expect(isYandexConfigured(parseEnv({ ...base, AUTH_YANDEX_ID: "id" }))).toBe(false);
+    expect(
+      isYandexConfigured(parseEnv({ ...base, AUTH_YANDEX_ID: "id", AUTH_YANDEX_SECRET: "s" })),
+    ).toBe(true);
   });
 });

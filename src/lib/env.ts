@@ -26,6 +26,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   return env;
 }
 
+export function isYandexConfigured(e: Env): boolean {
+  return Boolean(e.AUTH_YANDEX_ID && e.AUTH_YANDEX_SECRET);
+}
+
 let cached: Env | undefined;
 
 export function env(): Env {

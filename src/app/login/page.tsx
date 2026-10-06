@@ -2,10 +2,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { signInWithYandex } from "@/app/actions";
 import { isDevLoginEnabled } from "@/lib/auth/sessions";
+import { env, isYandexConfigured } from "@/lib/env";
 
 export default async function LoginPage() {
   const session = await auth();
   if (session?.user?.id) redirect("/");
+  const yandexReady = isYandexConfigured(env());
 
   return (
     <main className="flex flex-1 items-center justify-center px-4">
@@ -15,13 +17,19 @@ export default async function LoginPage() {
           <p className="text-sm text-muted">Заметки и календарь на естественном языке</p>
         </div>
 
-        <form action={signInWithYandex}>
+        <form action={signInWithYandex} className="space-y-2">
           <button
             type="submit"
-            className="w-full rounded-lg bg-[#ffcc00] px-4 py-3 font-medium text-black hover:bg-[#f5c400]"
+            disabled={!yandexReady}
+            className="w-full rounded-lg bg-[#ffcc00] px-4 py-3 font-medium text-black hover:bg-[#f5c400] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Войти с Яндекс ID
           </button>
+          {!yandexReady && (
+            <p className="text-center text-xs text-muted">
+              Вход через Яндекс ID не настроен: задайте AUTH_YANDEX_ID и AUTH_YANDEX_SECRET
+            </p>
+          )}
         </form>
 
         {isDevLoginEnabled() && (

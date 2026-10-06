@@ -7,9 +7,11 @@ import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { requireUser } from "@/lib/auth/current-user";
 import { revokeAllSessions } from "@/lib/auth/sessions";
+import { env, isYandexConfigured } from "@/lib/env";
 import { isValidTimezone } from "@/lib/timezone";
 
 export async function signInWithYandex() {
+  if (!isYandexConfigured(env())) redirect("/login");
   await signIn("yandex", { redirectTo: "/" });
 }
 

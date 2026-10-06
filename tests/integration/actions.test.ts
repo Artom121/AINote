@@ -19,6 +19,9 @@ vi.mock("next/navigation", () => ({
 
 vi.stubEnv("DATABASE_URL", process.env.TEST_DATABASE_URL!);
 vi.stubEnv("AUTH_SECRET", "x".repeat(32));
+// Без ключей Яндекс ID, даже если они заданы в локальном .env.
+vi.stubEnv("AUTH_YANDEX_ID", "");
+vi.stubEnv("AUTH_YANDEX_SECRET", "");
 
 const { initTimezone, signInWithYandex, signOutAction, signOutEverywhere } =
   await import("@/app/actions");
@@ -100,7 +103,16 @@ describe("initTimezone", () => {
 });
 
 describe("вход и выход", () => {
+  it("без ключей Яндекс ID вход не запускается", async () => {
+    await expect(signInWithYandex()).rejects.toThrow("REDIRECT:/login");
+    expect(authMock.signIn).not.toHaveBeenCalled();
+  });
+
   it("вход через Яндекс ID", async () => {
+    vi.stubEnv("AUTH_YANDEX_ID", "id");
+    vi.stubEnv("AUTH_YANDEX_SECRET", "secret");
+    vi.resetModules();
+    const { signInWithYandex } = await import("@/app/actions");
     await signInWithYandex();
     expect(authMock.signIn).toHaveBeenCalledWith("yandex", { redirectTo: "/" });
   });

@@ -63,7 +63,7 @@ pnpm lint             # ESLint + Prettier
 pnpm typecheck        # tsc
 pnpm test             # юнит + интеграционные (нужен TEST_DATABASE_URL и запущенная БД)
 pnpm test:coverage    # то же с покрытием, порог 70%
-pnpm test:e2e         # Playwright: поднимает next dev на :3100
+pnpm test:e2e         # Playwright: использует pnpm dev на :3000 или поднимает его сам
 ```
 
 Интеграционные тесты перед прогоном пересоздают схему в `TEST_DATABASE_URL` — не указывайте
