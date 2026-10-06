@@ -23,6 +23,16 @@ services:
     depends_on:
       db: { condition: service_healthy }
 
+  # Фоновые задачи (pg-boss): очистка корзины и др.
+  worker:
+    build: { context: ., target: migrator }
+    command: ["pnpm", "worker"]
+    environment:
+      DATABASE_URL: postgres://assistant:assistant@db:5432/assistant
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
   app:
     build: { context: ., target: runner }
     env_file: .env
